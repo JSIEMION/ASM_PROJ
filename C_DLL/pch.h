@@ -11,5 +11,6 @@
 #include "framework.h"
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #endif //PCH_H

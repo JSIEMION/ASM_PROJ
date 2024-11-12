@@ -13,7 +13,7 @@ namespace ASM_PROJ
 {
     internal class Program
     {
-        [DllImport(@"C:\Users\damby\Desktop\ASM_PROJ\x64\Debug\C_DLL.dll")]
+        [DllImport(@"C:\Users\Użytkownik\Desktop\idk\ASM_PROJ\x64\Debug\DDL_ASM.dll")]
         static extern void MyProc1(IntPtr ptr, int height, int width, int start, int end);
         static void Main(string[] args)
         {
@@ -21,7 +21,7 @@ namespace ASM_PROJ
 
             string file = Console.ReadLine();
 
-            Bitmap bmp = new Bitmap("C:\\Users\\damby\\Desktop\\ASM_PROJ\\png.png");
+            Bitmap bmp = new Bitmap("C:\\Users\\Użytkownik\\Desktop\\idk\\ASM_PROJ\\png.png");
 
             //int newWidth = bmpNoBorder.Width + (2);
             //int newHeight = bmpNoBorder.Height + (2);
@@ -49,6 +49,8 @@ namespace ASM_PROJ
 
             IntPtr ptr = bmpData.Scan0;
 
+            //w = bmpData.Stride;
+
             Console.WriteLine("Enter threads number: ");
 
             string threadsString = Console.ReadLine();
@@ -56,7 +58,10 @@ namespace ASM_PROJ
             int threadsNumber = int.Parse(threadsString);
 
             Thread[] threads = new Thread[threadsNumber];
-
+            if (bmp.Width % 4 != 0)
+            {
+                w += 4 - (bmp.Width % 4);
+            }
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
@@ -77,6 +82,8 @@ namespace ASM_PROJ
                 try
                 {
                     Console.WriteLine("Thread: " + i + " creating");
+                    Console.WriteLine("start line: " + start);
+                    Console.WriteLine("end line: " + end);
                     threads[i] = new Thread(() => MyProc1(ptr, h, w, start, end));
                     Console.WriteLine("Thread: " + i + " created");
                     Console.WriteLine("Thread: " + i + " starting");
@@ -107,9 +114,8 @@ namespace ASM_PROJ
             sw.Stop();
 
             Console.WriteLine(sw.ElapsedMilliseconds + " ms has elapsed");
-
             bmp.UnlockBits(bmpData);
-            bmp.Save("bmp.png", ImageFormat.Png);
+            bmp.Save("C:\\Users\\Użytkownik\\Desktop\\idk\\ASM_PROJ\\bmp.png", ImageFormat.Png);
 
             //int width= bmp.Width/threadsNumber;
 
