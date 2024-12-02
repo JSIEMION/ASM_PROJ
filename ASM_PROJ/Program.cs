@@ -8,20 +8,22 @@ using System.Threading.Tasks;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Diagnostics;
+using System.Collections;
 
 namespace ASM_PROJ
 {
     internal class Program
     {
-        [DllImport(@"C:\Users\Użytkownik\Desktop\idk\ASM_PROJ\x64\Debug\DDL_ASM.dll")]
-        static extern void MyProc1(IntPtr ptr, int height, int width, int start, int end);
+        [DllImport(@"C:\Users\damby\Desktop\ASM_PROJ\x64\Debug\ASM_DLL.dll")]
+        static extern int MyProc1(IntPtr sourcePtr, IntPtr destPtr, int height, int width, int start, int end);
         static void Main(string[] args)
         {
             Console.WriteLine("Enter file path: ");
 
-            string file = Console.ReadLine();
+            //string file = Console.ReadLine();
 
-            Bitmap bmp = new Bitmap("C:\\Users\\Użytkownik\\Desktop\\idk\\ASM_PROJ\\png.png");
+            Bitmap source = new Bitmap("C:\\Users\\damby\\Desktop\\ASM_PROJ\\png.png");
+
 
             //int newWidth = bmpNoBorder.Width + (2);
             //int newHeight = bmpNoBorder.Height + (2);
@@ -39,17 +41,25 @@ namespace ASM_PROJ
             //}
 
 
-            int w = bmp.Width;
-            int h = bmp.Height;
+            int w = source.Width;
+            int h = source.Height;
+
+            Bitmap dest = new Bitmap(w, h);
 
             Rectangle rect = new Rectangle(0, 0, w, h);
             
-            System.Drawing.Imaging.BitmapData bmpData =
-                bmp.LockBits(rect, System.Drawing.Imaging.ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
+            System.Drawing.Imaging.BitmapData sourceData =
+                source.LockBits(rect, System.Drawing.Imaging.ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
 
-            IntPtr ptr = bmpData.Scan0;
+            System.Drawing.Imaging.BitmapData destData =
+                dest.LockBits(rect, System.Drawing.Imaging.ImageLockMode.WriteOnly, PixelFormat.Format24bppRgb);
 
-            //w = bmpData.Stride;
+            IntPtr sourcePtr = sourceData.Scan0;
+
+            IntPtr destPtr = destData.Scan0;
+
+            //int x = MyProc1(sourcePtr, destPtr, 9, 7, 2, 5);
+            //Console.WriteLine(x);
 
             Console.WriteLine("Enter threads number: ");
 
@@ -58,33 +68,34 @@ namespace ASM_PROJ
             int threadsNumber = int.Parse(threadsString);
 
             Thread[] threads = new Thread[threadsNumber];
-            if (bmp.Width % 4 != 0)
-            {
-                w += 4 - (bmp.Width % 4);
+            
+            if (source.Width % 4 != 0){
+                w += 4 - (source.Width % 4);
             }
+            
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
             for (int i = 0; i < threadsNumber; i++)
             {
-                int start = i * (bmp.Height / threadsNumber);
+                int start = i * (source.Height / threadsNumber);
 
                 int end = 0;
 
                 if (i == threadsNumber - 1)
                 {
-                    end = bmp.Height;
+                    end = source.Height;
                 }
                 else
                 { 
-                    end = (i + 1) * (bmp.Height / threadsNumber); 
+                    end = (i + 1) * (source.Height / threadsNumber); 
                 }
                 try
                 {
                     Console.WriteLine("Thread: " + i + " creating");
                     Console.WriteLine("start line: " + start);
                     Console.WriteLine("end line: " + end);
-                    threads[i] = new Thread(() => MyProc1(ptr, h, w, start, end));
+                    threads[i] = new Thread(() => MyProc1(sourcePtr, destPtr, h, w, start, end));
                     Console.WriteLine("Thread: " + i + " created");
                     Console.WriteLine("Thread: " + i + " starting");
                     threads[i].Start();
@@ -114,28 +125,9 @@ namespace ASM_PROJ
             sw.Stop();
 
             Console.WriteLine(sw.ElapsedMilliseconds + " ms has elapsed");
-            bmp.UnlockBits(bmpData);
-            bmp.Save("C:\\Users\\Użytkownik\\Desktop\\idk\\ASM_PROJ\\bmp.png", ImageFormat.Png);
-
-            //int width= bmp.Width/threadsNumber;
-
-            //List<Bitmap> bmpToProcess = new List<Bitmap>();
-
-            //System.Drawing.Imaging.PixelFormat format = bmp.PixelFormat;
-
-            //for (int i = 0; i < threadsNumber; i++)
-            //{
-            //    Rectangle cloneRect = new Rectangle(0+ width * i, 0, width, bmp.Height);
-            //    bmpToProcess.Add(bmp.Clone(cloneRect,format));
-            //}
-
-            //Console.WriteLine(bmpToProcess.Count);
-
-            //var parallelWorkItems = bmpToProcess.AsParallel().WithDegreeOfParallelism(threadsNumber);
-
-            //parallelWorkItems.ForAll(Processing);
-
-            //newImage.Save("bmp.png", ImageFormat.Png);
+            source.UnlockBits(sourceData);
+            dest.UnlockBits(destData);
+            dest.Save("C:\\Users\\damby\\Desktop\\ASM_PROJ\\bmp.png", ImageFormat.Png);
 
         }
 
