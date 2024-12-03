@@ -58,9 +58,6 @@ namespace ASM_PROJ
 
             IntPtr destPtr = destData.Scan0;
 
-            //int x = MyProc1(sourcePtr, destPtr, 9, 7, 2, 5);
-            //Console.WriteLine(x);
-
             Console.WriteLine("Enter threads number: ");
 
             string threadsString = Console.ReadLine();
@@ -128,7 +125,7 @@ namespace ASM_PROJ
             source.UnlockBits(sourceData);
             dest.UnlockBits(destData);
             dest.Save("C:\\Users\\damby\\Desktop\\ASM_PROJ\\bmp.png", ImageFormat.Png);
-
+            Console.ReadKey();
         }
 
     }
