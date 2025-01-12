@@ -20,8 +20,6 @@ namespace ASM_PROJ
         {
             Console.WriteLine("Enter file path: ");
 
-            //string file = Console.ReadLine();
-
             Bitmap source = new Bitmap("C:\\Users\\damby\\Desktop\\ASM_PROJ\\png.png");
 
 
@@ -44,6 +42,7 @@ namespace ASM_PROJ
             int w = source.Width;
             int h = source.Height;
 
+
             Bitmap dest = new Bitmap(w, h);
 
             Rectangle rect = new Rectangle(0, 0, w, h);
@@ -65,11 +64,12 @@ namespace ASM_PROJ
             int threadsNumber = int.Parse(threadsString);
 
             Thread[] threads = new Thread[threadsNumber];
-            
-            if (source.Width % 4 != 0){
+
+            if (source.Width % 4 != 0)
+            {
                 w += 4 - (source.Width % 4);
             }
-            
+
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
@@ -92,6 +92,8 @@ namespace ASM_PROJ
                     Console.WriteLine("Thread: " + i + " creating");
                     Console.WriteLine("start line: " + start);
                     Console.WriteLine("end line: " + end);
+                    Console.WriteLine("width: " + w);
+                    Console.WriteLine("height: " + h);
                     threads[i] = new Thread(() => MyProc1(sourcePtr, destPtr, h, w, start, end));
                     Console.WriteLine("Thread: " + i + " created");
                     Console.WriteLine("Thread: " + i + " starting");
