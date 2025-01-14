@@ -10,7 +10,13 @@ void MyProc1(uint8_t* sourcePtr, uint8_t* destPtr, int height, int width, int st
 
 	int chanels = 3;
 
-	uint8_t* temp_ptr = (uint8_t*)malloc(height * width * chanels);
+	int padding = 0;
+	if ((width * chanels) % 4 != 0) {
+		padding = 4 - (width * chanels % 4);
+	}
+
+	
+	uint8_t* temp_ptr = (uint8_t*)malloc(height * width * chanels + padding * height);
 
 	if (!temp_ptr) {
 		return;
@@ -31,7 +37,7 @@ void MyProc1(uint8_t* sourcePtr, uint8_t* destPtr, int height, int width, int st
 
 			for (int k = -1; k <= 1; k++) {
 				for (int l = -1; l <= 1; l++) {
-					int ind = ((i + k) * width + (j + l)) * chanels;
+					int ind = ((i + k) * width + (j + l)) * chanels + padding * (i + k);
 					B += sourcePtr[ind] * mask[k + 1][l + 1];
 					G += sourcePtr[ind + 1] * mask[k + 1][l + 1];
 					R += sourcePtr[ind + 2] * mask[k + 1][l + 1];
@@ -59,7 +65,7 @@ void MyProc1(uint8_t* sourcePtr, uint8_t* destPtr, int height, int width, int st
 				B = 255;
 			}
 
-			int destInd = (i * width + j) * chanels;
+			int destInd = (i * width + j) * chanels + padding*i;
 			destPtr[destInd] = (uint8_t)(B);
 			destPtr[destInd + 1] = (uint8_t)(G);
 			destPtr[destInd + 2] = (uint8_t)(R);

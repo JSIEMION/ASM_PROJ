@@ -14,7 +14,7 @@ namespace ASM_PROJ
 {
     internal class Program
     {
-        [DllImport(@"C:\Users\damby\Desktop\ASM_PROJ\x64\Debug\ASM_DLL.dll")]
+        [DllImport(@"C:\Users\damby\Desktop\ASM_PROJ\x64\Debug\C_DLL.dll")]
         static extern int MyProc1(IntPtr sourcePtr, IntPtr destPtr, int height, int width, int start, int end);
         static void Main(string[] args)
         {
@@ -65,10 +65,10 @@ namespace ASM_PROJ
 
             Thread[] threads = new Thread[threadsNumber];
 
-            if (source.Width % 4 != 0)
-            {
-                w += 4 - (source.Width % 4);
-            }
+            //if (source.Width % 4 != 0)
+            //{
+            //    w += 4 - (source.Width % 4);
+            //}
 
             Stopwatch sw = new Stopwatch();
             sw.Start();
