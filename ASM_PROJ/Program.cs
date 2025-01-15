@@ -15,7 +15,10 @@ namespace ASM_PROJ
     internal class Program
     {
         [DllImport(@"C:\Users\damby\Desktop\ASM_PROJ\x64\Debug\C_DLL.dll")]
-        static extern int MyProc1(IntPtr sourcePtr, IntPtr destPtr, int height, int width, int start, int end);
+        static extern void cProc(IntPtr sourcePtr, IntPtr destPtr, int height, int width, int start, int end);
+
+        [DllImport(@"C:\Users\damby\Desktop\ASM_PROJ\x64\Debug\ASM_DLL.dll")]
+        static extern void asmProc(IntPtr sourcePtr, IntPtr destPtr, int height, int width, int start, int end);
         static void Main(string[] args)
         {
             Console.WriteLine("Enter file path: ");
@@ -43,19 +46,26 @@ namespace ASM_PROJ
             int h = source.Height;
 
 
-            Bitmap dest = new Bitmap(w, h);
+            Bitmap destC = new Bitmap(w, h);
+
+            Bitmap destAsm = new Bitmap(w, h);
 
             Rectangle rect = new Rectangle(0, 0, w, h);
             
             System.Drawing.Imaging.BitmapData sourceData =
                 source.LockBits(rect, System.Drawing.Imaging.ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
 
-            System.Drawing.Imaging.BitmapData destData =
-                dest.LockBits(rect, System.Drawing.Imaging.ImageLockMode.WriteOnly, PixelFormat.Format24bppRgb);
+            System.Drawing.Imaging.BitmapData destCData =
+                destC.LockBits(rect, System.Drawing.Imaging.ImageLockMode.WriteOnly, PixelFormat.Format24bppRgb);
+
+            System.Drawing.Imaging.BitmapData destAsmData =
+                destAsm.LockBits(rect, System.Drawing.Imaging.ImageLockMode.WriteOnly, PixelFormat.Format24bppRgb);
 
             IntPtr sourcePtr = sourceData.Scan0;
 
-            IntPtr destPtr = destData.Scan0;
+            IntPtr destCPtr = destCData.Scan0;
+
+            IntPtr destAsmPtr = destAsmData.Scan0;
 
             Console.WriteLine("Enter threads number: ");
 
@@ -63,15 +73,10 @@ namespace ASM_PROJ
 
             int threadsNumber = int.Parse(threadsString);
 
-            Thread[] threads = new Thread[threadsNumber];
+            Thread[] cThreads = new Thread[threadsNumber];
 
-            //if (source.Width % 4 != 0)
-            //{
-            //    w += 4 - (source.Width % 4);
-            //}
-
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
+            Stopwatch swC = new Stopwatch();
+            swC.Start();
 
             for (int i = 0; i < threadsNumber; i++)
             {
@@ -94,10 +99,10 @@ namespace ASM_PROJ
                     Console.WriteLine("end line: " + end);
                     Console.WriteLine("width: " + w);
                     Console.WriteLine("height: " + h);
-                    threads[i] = new Thread(() => MyProc1(sourcePtr, destPtr, h, w, start, end));
+                    cThreads[i] = new Thread(() => cProc(sourcePtr, destCPtr, h, w, start, end));
                     Console.WriteLine("Thread: " + i + " created");
                     Console.WriteLine("Thread: " + i + " starting");
-                    threads[i].Start();
+                    cThreads[i].Start();
                     Console.WriteLine("Thread: " + i + " started");
                 }
                 catch(Exception e)
@@ -107,7 +112,7 @@ namespace ASM_PROJ
                 }
             }
 
-            foreach( Thread thread in threads)
+            foreach( Thread thread in cThreads)
             {
                 try
                 {
@@ -121,12 +126,86 @@ namespace ASM_PROJ
                 }
             }
 
-            sw.Stop();
+            swC.Stop();
 
-            Console.WriteLine(sw.ElapsedMilliseconds + " ms has elapsed");
+            Console.WriteLine(swC.ElapsedMilliseconds + " ms has elapsed for C");
+
+            destC.UnlockBits(destCData);
+
+            destC.Save("C:\\Users\\damby\\Desktop\\ASM_PROJ\\bmpC.png", ImageFormat.Png);
+
             source.UnlockBits(sourceData);
-            dest.UnlockBits(destData);
-            dest.Save("C:\\Users\\damby\\Desktop\\ASM_PROJ\\bmp.png", ImageFormat.Png);
+
+
+
+            source.LockBits(rect, System.Drawing.Imaging.ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+
+            sourcePtr = sourceData.Scan0;
+
+            Thread[] AsmThreads = new Thread[threadsNumber];
+
+            Stopwatch swAsm = new Stopwatch();
+            swAsm.Start();
+
+            for (int i = 0; i < threadsNumber; i++)
+            {
+                int start = i * (source.Height / threadsNumber);
+
+                int end = 0;
+
+                if (i == threadsNumber - 1)
+                {
+                    end = source.Height;
+                }
+                else
+                {
+                    end = (i + 1) * (source.Height / threadsNumber);
+                }
+                try
+                {
+                    Console.WriteLine("Thread: " + i + " creating");
+                    Console.WriteLine("start line: " + start);
+                    Console.WriteLine("end line: " + end);
+                    Console.WriteLine("width: " + w);
+                    Console.WriteLine("height: " + h);
+                    AsmThreads[i] = new Thread(() => asmProc(sourcePtr, destAsmPtr, h, w, start, end));
+                    Console.WriteLine("Thread: " + i + " created");
+                    Console.WriteLine("Thread: " + i + " starting");
+                    AsmThreads[i].Start();
+                    Console.WriteLine("Thread: " + i + " started");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Thread: " + i + " failed");
+                    Console.WriteLine(e.StackTrace);
+                }
+            }
+
+            foreach (Thread thread in AsmThreads)
+            {
+                try
+                {
+                    Console.WriteLine("Thread joining");
+                    thread.Join();
+                    Console.WriteLine("Thread joined");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Thread failed");
+                    Console.WriteLine(e.StackTrace);
+                }
+            }
+
+            swAsm.Stop();
+
+            Console.WriteLine(swAsm.ElapsedMilliseconds + " ms has elapsed for Asm");
+
+            source.UnlockBits(sourceData);
+            
+            destAsm.UnlockBits(destAsmData);
+            
+            destAsm.Save("C:\\Users\\damby\\Desktop\\ASM_PROJ\\bmpAsm.png", ImageFormat.Png);
+
             Console.ReadKey();
         }
 

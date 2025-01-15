@@ -4,6 +4,8 @@ mask_bright DW 9,9,9,9,9,9,0,0
 test_values DW 0,0,255,0,0,255,0,0
 odd_mask DB 255,255,255,0,0,0,0,0,0,0,0,0,0,0,0,0
 even_mask DB 255,255,255,255,255,255,0,0,0,0,0,0,0,0,0,0
+odd_preserve DB 0,0,0,255,255,255,255,255,255,255,255,255,255,255,255,255
+even_preserve DB 0,0,0,0,0,0,255,255,255,255,255,255,255,255,255,255
 
 
 
@@ -21,10 +23,14 @@ even_mask DB 255,255,255,255,255,255,0,0,0,0,0,0,0,0,0,0
 ;xmm1 - xmm8 - pozosta³e pixele w masce
 ;xmm9 - rejestr z tymczasowymi danymi
 ;xmm10 - rejestr z samymi 9 do mno¿enia z rejestrem xmm0
-;xmm11 - maska dla niepa¿ystych rzêdów
+;xmm11 - maska koryguj¹ca
+;xmm12 - zachowanie nieaktualizowanych pixeli
 
 .code
-MyProc1 proc
+asmProc proc
+			
+			;mov RAX, 2
+			;mov [RSP+40], RAX
 	
 			mov R10, RDX									;umieszczenie adresu tablicy docelowej w R10	!!!MUSI BYÆ PRZED PIERWSZ¥ INSTRUKCJ¥ DIV/MUL!!!
 			movdqu xmm10, xmmword ptr[mask_bright]			;umieszczenie maski w xmm10
@@ -188,6 +194,14 @@ main_loop:	xor RAX, RAX									;wyczyszczenie RAX
 			lea RAX, [even_mask]
 			movdqu xmm11, [RAX]
 			pand xmm0, xmm11
+			
+			movdqu xmm12, [R10+R12]
+			lea RAX, [even_preserve]
+			movdqu xmm11, [RAX]
+			pand xmm12, xmm11
+
+			paddb xmm0, xmm12
+			
 			movdqu [R10+R12], xmm0
 			sub R13, 2
 			add R12, 6
@@ -200,6 +214,15 @@ last_pixel_in_odd_width:
 			lea RAX, [odd_mask]
 			movdqu xmm11, [RAX]
 			pand xmm0, xmm11
+
+			
+			movdqu xmm12, [R10+R12]
+			lea RAX, [odd_preserve]
+			movdqu xmm11, [RAX]
+			pand xmm12, xmm11
+
+			paddb xmm0, xmm12
+			
 			movdqu [R10+R12], xmm0
 			sub R13, 1
 			add R12, 3
@@ -233,6 +256,6 @@ skipping:
 
 end_program:			
 		ret
-		MyProc1 endp
+		asmProc endp
 		end
 

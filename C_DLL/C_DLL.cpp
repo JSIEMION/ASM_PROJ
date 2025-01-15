@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "C_DLL.h"
 
-void MyProc1(uint8_t* sourcePtr, uint8_t* destPtr, int height, int width, int start, int end) {
+void cProc(uint8_t* sourcePtr, uint8_t* destPtr, int height, int width, int start, int end) {
 	int mask[3][3] = {
 		{-1,-1,-1},
 		{-1,9,-1},
