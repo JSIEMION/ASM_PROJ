@@ -298,13 +298,11 @@
         private Label threadsNumberLabel;
         private Label timeElapsedLabel;
         private Label sourcePathLabel;
-        private Label destPathLabel;
         private TextBox timeElapsedBox;
         private Button openFileButton;
         private Button saveFileButton;
         private SaveFileDialog saveFileDialog;
         private OpenFileDialog openFileDialog;
-        private Button chooseSaveLocationButton;
         
         private Bitmap sourceBmp;
         private Bitmap destBmp;

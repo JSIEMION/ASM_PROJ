@@ -36,22 +36,22 @@ asmProc proc
 			movdqu xmm10, xmmword ptr[mask_bright]			;umieszczenie maski w xmm10
 
 
-			mov RAX, R9
-			mov RBX, 3
-			mul RBX
-			mov RBX, 4
-			div RBX
-			cmp RDX, 0
-			je no_padding
+			mov RAX, R9										;umieszczanie szerokoœci w RAX
+			mov RBX, 3										;umieszczanie liczby 3 (iloœæ bajtów na pixel) w RBX do mno¿enia w przysz³oœci
+			mul RBX											;mno¿enie bajtów na pixel przez szerokoœæ
+			mov RBX, 4										;umieszczanie 4 (zaokr¹glanie bajtów w rzêdzie w formacie BMP) w RBX
+			div RBX											;dzielenie szerokoœci w bajtach przez 4
+			cmp RDX, 0										;sprawdzanie czy szerokoœæ w bajtach by³a podzielna 4 bez reszty
+			je no_padding									;if R9*3 % 4 == 0 brak paddingu
 
 padding_present:
-			sub RBX, RDX
-			mov R14, RBX
+			sub RBX, RDX									;obliczanie paddingu (4-(R9*3)%4)
+			mov R14, RBX									;przenoszenie paddingu do R14
 
 			jmp end_padding_setup
 
 no_padding:
-			mov R14, 0
+			mov R14, 0										;brak paddingu
 
 end_padding_setup:
 			xor RBX, RBX
@@ -73,15 +73,15 @@ set_start:	mul R9											;mno¿enie pocz¹tkowej linii przez szerokoœæ obrazu w
 
 			add R12, 3										;pominiêcie pierwszego pixela w wierszu
 
-			mov RBX, R14
-			mov RAX, [RSP+40]
-			cmp RAX, 0
-			jne no_first_row_correction
-			add RAX, 1
+			mov RBX, R14									;przenoszenie paddingu do RBX
+			mov RAX, [RSP+40]								;przenoszenie numeru pocz¹tkowego wiersza do RAX
+			cmp RAX, 0										;porównanie numeru pierwszego wiersza do przerobienia z zerem
+			jne no_first_row_correction						;if [RSP+40] == 0 pominiêcie pierwszego wiersza
+			add RAX, 1										;pominiêcie pierwszego wiersza
 
 no_first_row_correction:
-			mul RBX
-			add R12, RAX
+			mul RBX											;mno¿enie paddnigu przez numer pierwszego wiersza
+			add R12, RAX									;dodanie obliczonej wartoœci do przesuniêcia wzglêdem pocz¹tku danych
 
 ;-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;obliczanie iloœci pixeli do przetworzenia w zale¿noœci od iloœci w¹tków
