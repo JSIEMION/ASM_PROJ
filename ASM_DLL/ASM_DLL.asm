@@ -17,6 +17,7 @@ even_preserve DB 0,0,0,0,0,0,255,255,255,255,255,255,255,255,255,255
 ;R12 - index przetwarzanego pixela
 ;R13 - licznik pomijania piwrwszego i ostatniego pixela w wierszu
 ;R14 - padding
+;R15 - stride
 ;[RSP+40] - numer pocz¹tkowego wiersza do przetworzenia
 ;[RSP+48] - numer wiersza po ostatnim wierszu do przetworzenia
 ;xmm0 - przetwarzane pixele (na œrodku maski)
@@ -119,73 +120,63 @@ multiply_pixels:
 
 
 ;-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
+;obliczanie stride
+			
+			
+			mov RAX, 3
+			mul R9
+			add RAX, R14
+			mov R15, RAX
+			xor RAX, RAX
+
+;-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
 ;g³ówna pêtla programu
 
 
 main_loop:	xor RAX, RAX									;wyczyszczenie RAX
 			
 			
-
-			movdqu xmm9, [RCX+R12]							;przeniesienie 8 bitowych danych z tablicy Ÿród³owej do xmm1
-			pmovzxbw xmm0, xmm9								;przeniesienie dolnych 8 danych z xmm1 do xmm0 z rozszerzeniem ich do 16 bitów
+			pmovzxbw xmm0, [RCX+R12]								;przeniesienie dolnych 8 danych z xmm1 do xmm0 z rozszerzeniem ich do 16 bitów
 
 
 			mov RAX, R12
-			sub RAX, R9
-			sub RAX, R9
-			sub RAX, R9
-			sub RAX, R14
-			sub RAX, 3
-			movdqu xmm9, [RCX+RAX]
-			pmovzxbw xmm1, xmm9
+			sub RAX, R15
+			pmovzxbw xmm1, [RCX+RAX-3]
 
-			add RAX, 3
-			movdqu xmm9, [RCX+RAX]
-			pmovzxbw xmm2, xmm9
+			pmovzxbw xmm2, [RCX+RAX]
 
-			add RAX, 3
-			movdqu xmm9, [RCX+RAX]
-			pmovzxbw xmm3, xmm9
+			pmovzxbw xmm3, [RCX+RAX+3]
 
 
 			mov RAX, R12
-			sub RAX, 3
-			movdqu xmm9, [RCX+RAX]
-			pmovzxbw xmm4, xmm9
+			pmovzxbw xmm4, [RCX+RAX-3]
 
-			add RAX, 6
-			movdqu xmm9, [RCX+RAX]
-			pmovzxbw xmm5, xmm9
+			pmovzxbw xmm5, [RCX+RAX+3]
 
 
 			mov RAX, R12
-			add RAX, R9
-			add RAX, R9
-			add RAX, R9
-			add RAX, R14
-			sub RAX, 3
-			movdqu xmm9, [RCX+RAX]
-			pmovzxbw xmm6, xmm9
+			add RAX, R15
+			pmovzxbw xmm6, [RCX+RAX-3]
 
-			add RAX, 3
-			movdqu xmm9, [RCX+RAX]
-			pmovzxbw xmm7, xmm9
+			pmovzxbw xmm7, [RCX+RAX]
 
-			add RAX, 3
-			movdqu xmm9, [RCX+RAX]
-			pmovzxbw xmm8, xmm9
+			pmovzxbw xmm8, [RCX+RAX+3]
 
 			
 			pmullw xmm0, xmm10
 
+			paddusw xmm1, xmm2
+			paddusw xmm3, xmm4
+			paddusw xmm5, xmm6
+			paddusw xmm7, xmm8
+
+			paddusw xmm1, xmm3
+			paddusw xmm5, xmm7
+
 			psubusw xmm0, xmm1
-			psubusw xmm0, xmm2
-			psubusw xmm0, xmm3
-			psubusw xmm0, xmm4
+
 			psubusw xmm0, xmm5
-			psubusw xmm0, xmm6
-			psubusw xmm0, xmm7
-			psubusw xmm0, xmm8
+
 
 			cmp R13, 1
 			je last_pixel_in_odd_width

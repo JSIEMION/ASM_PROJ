@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ASM_GUI": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}
