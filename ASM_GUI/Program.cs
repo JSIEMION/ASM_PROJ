@@ -12,15 +12,15 @@ namespace ASM_GUI
         static void Main()
         {
 
-            String workingDirectory = Directory.GetCurrentDirectory();
-            workingDirectory = Directory.GetParent(workingDirectory).FullName;
-            workingDirectory = Directory.GetParent(workingDirectory).FullName;
-            workingDirectory = Directory.GetParent(workingDirectory).FullName;
-            workingDirectory = Directory.GetParent(workingDirectory).FullName;
-            workingDirectory = Directory.GetParent(workingDirectory).FullName;
-            workingDirectory += "\\x64\\Release";
+            //String workingDirectory = Directory.GetCurrentDirectory();
+            //workingDirectory = Directory.GetParent(workingDirectory).FullName;
+            //workingDirectory = Directory.GetParent(workingDirectory).FullName;
+            //workingDirectory = Directory.GetParent(workingDirectory).FullName;
+            //workingDirectory = Directory.GetParent(workingDirectory).FullName;
+            //workingDirectory = Directory.GetParent(workingDirectory).FullName;
+            //workingDirectory += "\\x64\\Release";
 
-            SetDllDirectory(workingDirectory);
+            //SetDllDirectory(workingDirectory);
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();

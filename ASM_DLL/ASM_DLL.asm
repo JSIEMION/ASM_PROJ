@@ -1,11 +1,9 @@
 .data
 chanels DB 3
-mask_bright DW 9,9,9,9,9,9,0,0
+mask_bright DW 9,9,9,9,9,9,9,9
 test_values DW 0,0,255,0,0,255,0,0
-odd_mask DB 255,255,255,0,0,0,0,0,0,0,0,0,0,0,0,0
-even_mask DB 255,255,255,255,255,255,0,0,0,0,0,0,0,0,0,0
-odd_preserve DB 0,0,0,255,255,255,255,255,255,255,255,255,255,255,255,255
-even_preserve DB 0,0,0,0,0,0,255,255,255,255,255,255,255,255,255,255
+overrite_protection_mask_general DB 255, 255, 255, 255, 255, 255, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0
+
 
 
 
@@ -13,9 +11,9 @@ even_preserve DB 0,0,0,0,0,0,255,255,255,255,255,255,255,255,255,255
 ;R8 - wysokoœæ obrazu
 ;R9 - szerokoœæ obrazu
 ;R10 - adres tablicy docelowej
-;R11 - liczba pixeli do przetworzenia
-;R12 - index przetwarzanego pixela
-;R13 - licznik pomijania piwrwszego i ostatniego pixela w wierszu
+;R11 - liczba bajtów do przetworzenia
+;R12 - index przetwarzanego bajtu
+;R13 - licznik pomijania piwrwszego i ostatniego pixela w wierszu (w bajtach)
 ;R14 - padding
 ;R15 - stride
 ;[RSP+40] - numer pocz¹tkowego wiersza do przetworzenia
@@ -85,7 +83,7 @@ no_first_row_correction:
 			add R12, RAX									;dodanie obliczonej wartoœci do przesuniêcia wzglêdem pocz¹tku danych
 
 ;-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-;obliczanie iloœci pixeli do przetworzenia w zale¿noœci od iloœci w¹tków
+;obliczanie iloœci bajtów do przetworzenia w zale¿noœci od iloœci w¹tków
 			
 			mov RAX, [RSP+48]								;umieszczenie w RAX numeru ostatniego wiersza do przetworzenia
 			sub RAX, R8										;porównanie z wysokoœci¹ obrazu
@@ -109,14 +107,24 @@ check_first:
 multiply_pixels:
 			mov RAX, R11									;przeniesienie wartoœci do RAX w celu mno¿enia
 			mul R9											;mno¿enie koñcowej linii przez szerokoœæ obrazu wynik jest liczb¹ pixeli do przetworzenia
-			mov R11, RAX									;umieszczenie wyniku w R11
-			sub R11, 1										;odjêcie pierwszego pixela pomijanego przy inicjalizacji r12
+			mov RBX, 3
+			mul RBX
+			mov RBX, RAX
+			mov RAX, R14
+			mul R11
+			mov R11, RBX									;umieszczenie wyniku w R11
+			add R11, RAX
+			sub R11, 3										;odjêcie pierwszego pixela pomijanego przy inicjalizacji r12
 
 ;-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;inicjalizacja licznika pominiêæ
 
-			mov R13, R9										;
-			sub R13, 2										;inicjalizacja licznika pominiêæ pierwszego i ostatniego pixela
+			mov RAX, R9										;
+			mov RBX, 3										;
+			mul RBX											;
+			sub RAX, 6										;
+			mov R13, RAX									;
+															;inicjalizacja licznika pominiêæ pierwszego i ostatniego pixela
 
 
 ;-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
@@ -128,6 +136,7 @@ multiply_pixels:
 			add RAX, R14
 			mov R15, RAX
 			xor RAX, RAX
+			xor RBX, RBX
 
 ;-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
 ;g³ówna pêtla programu
@@ -136,7 +145,7 @@ multiply_pixels:
 main_loop:	xor RAX, RAX									;wyczyszczenie RAX
 			
 			
-			pmovzxbw xmm0, [RCX+R12]								;przeniesienie dolnych 8 danych z xmm1 do xmm0 z rozszerzeniem ich do 16 bitów
+			pmovzxbw xmm0, [RCX+R12]						;przeniesienie dolnych 8 danych z xmm1 do xmm0 z rozszerzeniem ich do 16 bitów
 
 
 			mov RAX, R12
@@ -178,71 +187,133 @@ main_loop:	xor RAX, RAX									;wyczyszczenie RAX
 			psubusw xmm0, xmm5
 
 
-			cmp R13, 1
-			je last_pixel_in_odd_width
+			cmp R13, 16
+			js overrite_protection
 
-			packuswb xmm0, xmm0								;skompresowanie danych spowrotem do 8 bitów z nasyceniem bez znaku
-			lea RAX, [even_mask]
-			movdqu xmm11, [RAX]
-			pand xmm0, xmm11
-			
-			movdqu xmm12, [R10+R12]
-			lea RAX, [even_preserve]
-			movdqu xmm11, [RAX]
-			pand xmm12, xmm11
-
-			paddb xmm0, xmm12
-			
-			movdqu [R10+R12], xmm0
-			sub R13, 2
-			add R12, 6
-			sub R11, 2
-			jmp continue_after_odd_width_check
-
-last_pixel_in_odd_width:
-			
 			packuswb xmm0, xmm0
-			lea RAX, [odd_mask]
-			movdqu xmm11, [RAX]
-			pand xmm0, xmm11
-
-			
-			movdqu xmm12, [R10+R12]
-			lea RAX, [odd_preserve]
-			movdqu xmm11, [RAX]
-			pand xmm12, xmm11
-
-			paddb xmm0, xmm12
-			
 			movdqu [R10+R12], xmm0
-			sub R13, 1
-			add R12, 3
-			sub R11, 1
 
-continue_after_odd_width_check:
-			;movdqu [R10+R12], xmm0							;przeniesienie danych z xmm0 do tablicy docelowej
 			
-													;dodanie 6 (iloœci pe³nych pixeli w xmm * iloœæ kana³ów) do przesuniêcia w tablicy w R12
+			add R12, 8
+			sub R11, 8
+			sub R13, 8
+			jmp main_loop
+
+overrite_protection:
+
+
+			cmp R13, 8
+			js last_in_row
+
+
+			packuswb xmm0, xmm0
+
+			mov RDI, R10
+			add RDI, R12
+			lea RAX, [overrite_protection_mask_general]
+			movdqu xmm11, [RAX]
+			maskmovdqu xmm0, xmm11
+
+
+
+			add R12, 8
+			sub R11, 8
+			sub R13, 8
+			
 			cmp R13, 0
 			je skipping
 
-continue_after_skip:			
-			;sub R11, 2										;odjêcie 2 (iloœci pe³nych pixeli w xmm) od ca³kowitej iloœci pixeli
-			;cmp R11, 0
-			;je end_program
-			jmp main_loop									;if RAX(R11) > 0 kontunuuj pêtlê
+			jmp main_loop
+
+last_in_row:
+			packuswb xmm0, xmm0
+
+
+			lea RAX, [overrite_protection_mask_general]
+			movdqu xmm11, [RAX]
+
+			mov RAX, 8
+			sub RAX, R13
+
+			cmp RAX, 1
+			je shift_1
+
+			cmp RAX, 2
+			je shift_2
+
+			cmp RAX, 3
+			je shift_3
+
+			cmp RAX, 4
+			je shift_4
+
+			cmp RAX, 5
+			je shift_5
+
+			cmp RAX, 6
+			je shift_6
+
+			cmp RAX, 7
+			je shift_7
+
+
+
+continue_after_shift:
+
+			mov RDI, R10
+			add RDI, R12
+
+			maskmovdqu xmm0, xmm11
+
+
+
+			add R12, R13
+			sub R11, R13
+			sub R13, R13
+
+			jmp skipping
 
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;obs³uga pominiêæ
 
-skipping:			
-			mov R13, R9
-			sub R13, 2
+skipping:	
+			mov RAX, R9										
+			mov RBX, 3										
+			mul RBX											
+			sub RAX, 6										
+			mov R13, RAX
+
 			add R12, 6
 			add R12, R14
-			sub R11, 2
+			sub R11, 6
+			sub R11, R14
 			js end_program
-			jmp continue_after_skip
+			jmp main_loop
+
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+;obs³uga przesuniêcia bitowego
+
+shift_1:
+			psrldq xmm11, 1
+			jmp continue_after_shift
+shift_2:
+			psrldq xmm11, 2
+			jmp continue_after_shift
+shift_3:
+			psrldq xmm11, 3
+			jmp continue_after_shift
+shift_4:
+			psrldq xmm11, 4
+			jmp continue_after_shift
+shift_5:
+			psrldq xmm11, 5
+			jmp continue_after_shift
+shift_6:
+			psrldq xmm11, 6
+			jmp continue_after_shift
+shift_7:
+			psrldq xmm11, 7
+			jmp continue_after_shift
 
 
 end_program:			
