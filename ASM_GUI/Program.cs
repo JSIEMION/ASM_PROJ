@@ -12,13 +12,13 @@ namespace ASM_GUI
         static void Main()
         {
 
-            //String workingDirectory = Directory.GetCurrentDirectory();
-            //workingDirectory = Directory.GetParent(workingDirectory).FullName;
-            //workingDirectory = Directory.GetParent(workingDirectory).FullName;
-            //workingDirectory = Directory.GetParent(workingDirectory).FullName;
-            //workingDirectory = Directory.GetParent(workingDirectory).FullName;
-            //workingDirectory = Directory.GetParent(workingDirectory).FullName;
-            //workingDirectory += "\\x64\\Release";
+            String workingDirectory = Directory.GetCurrentDirectory();
+            workingDirectory = Directory.GetParent(workingDirectory).FullName;
+            workingDirectory = Directory.GetParent(workingDirectory).FullName;
+            workingDirectory = Directory.GetParent(workingDirectory).FullName;
+            workingDirectory = Directory.GetParent(workingDirectory).FullName;
+            workingDirectory = Directory.GetParent(workingDirectory).FullName;
+            workingDirectory += "\\x64\\Release";
 
             //SetDllDirectory(workingDirectory);
             // To customize application configuration such as set high DPI settings or default font,
@@ -30,13 +30,10 @@ namespace ASM_GUI
 
         }
 
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern bool SetDllDirectory(string lpPathName);
-
-        [DllImport(@"C_DLL.dll")]
+        [DllImport("C_DLL.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern void cProc(IntPtr sourcePtr, IntPtr destPtr, int height, int width, int start, int end);
 
-        [DllImport(@"ASM_DLL.dll")]
+        [DllImport("ASM_DLL.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern void asmProc(IntPtr sourcePtr, IntPtr destPtr, int height, int width, int start, int end);
 
     }

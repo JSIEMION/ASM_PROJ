@@ -27,9 +27,18 @@ overrite_protection_mask_general DB 255, 255, 255, 255, 255, 255, 255, 255, 0, 0
 
 .code
 asmProc proc
-			
-			;mov RAX, 2
-			;mov [RSP+40], RAX
+			mov R10d, [RSP+40]
+			mov R11d, [RSP+48]
+			push RBX
+			push RBP
+			push RDI
+			push RSI
+			push R12
+			push R13
+			push R14 
+			push R15
+			mov RSI, R10
+			mov RDI, R11
 	
 			mov R10, RDX									;umieszczenie adresu tablicy docelowej w R10	!!!MUSI BYÆ PRZED PIERWSZ¥ INSTRUKCJ¥ DIV/MUL!!!
 			movdqu xmm10, xmmword ptr[mask_bright]			;umieszczenie maski w xmm10
@@ -58,7 +67,7 @@ end_padding_setup:
 ;-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;ustawianie przesuniêcia w tablicy Ÿród³owej na odpowiednie miejsce w zale¿noœci od podzia³u obrazu na w¹tki
 
-			mov RAX, [RSP+40]								;umieszczenie w RAX numeru pierwszego wiersza do przetworzenia
+			mov RAX, RSI								;umieszczenie w RAX numeru pierwszego wiersza do przetworzenia
 			sub RAX, 0
 			jnz set_start									;if [RSP+40] == 0 pomiñ pierwszy wiersz
 			add RAX, 1										;pominiêcie pierwszego wiersza
@@ -73,7 +82,7 @@ set_start:	mul R9											;mno¿enie pocz¹tkowej linii przez szerokoœæ obrazu w
 			add R12, 3										;pominiêcie pierwszego pixela w wierszu
 
 			mov RBX, R14									;przenoszenie paddingu do RBX
-			mov RAX, [RSP+40]								;przenoszenie numeru pocz¹tkowego wiersza do RAX
+			mov RAX, RSI								;przenoszenie numeru pocz¹tkowego wiersza do RAX
 			cmp RAX, 0										;porównanie numeru pierwszego wiersza do przerobienia z zerem
 			jne no_first_row_correction						;if [RSP+40] == 0 pominiêcie pierwszego wiersza
 			add RAX, 1										;pominiêcie pierwszego wiersza
@@ -85,21 +94,21 @@ no_first_row_correction:
 ;-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;obliczanie iloœci bajtów do przetworzenia w zale¿noœci od iloœci w¹tków
 			
-			mov RAX, [RSP+48]								;umieszczenie w RAX numeru ostatniego wiersza do przetworzenia
+			mov RAX, RDI								;umieszczenie w RAX numeru ostatniego wiersza do przetworzenia
 			sub RAX, R8										;porównanie z wysokoœci¹ obrazu
 			
 			jne not_last									;if R8 == [RSP+48] odejmij ostatni wiersz
-			mov R11, [RSP+48]								;umieszczenie w R11 numeru ostatniego wiersza do przetworzenia
-			sub R11, [RSP+40]								;odjêcie pocz¹tkowego wiersza wynikiem jest iloœæ wierszy do przetworzenia
+			mov R11, RDI								;umieszczenie w R11 numeru ostatniego wiersza do przetworzenia
+			sub R11, RSI								;odjêcie pocz¹tkowego wiersza wynikiem jest iloœæ wierszy do przetworzenia
 			sub R11, 1										;pominiêcie ostatniego wiersza
 			jmp check_first									;skok do dalszych obliczeñ
 			
 
-not_last:	mov R11, [RSP+48]								;umieszczenie w R11 numeru ostatniego wiersza do przetworzenia
-			sub R11, [RSP+40]								;odjêcie pocz¹tkowego wiersza, wynikiem jest iloœæ wierszy do przetworzenia
+not_last:	mov R11, RDI								;umieszczenie w R11 numeru ostatniego wiersza do przetworzenia
+			sub R11, RSI								;odjêcie pocz¹tkowego wiersza, wynikiem jest iloœæ wierszy do przetworzenia
 			
 check_first:
-			mov RAX, [RSP+40]								;przeniesienie numeru pierwszego wiersza do RAX
+			mov RAX, RSI								;przeniesienie numeru pierwszego wiersza do RAX
 			sub RAX, 0										
 			jnz multiply_pixels								;if [RSP+40] == 0 zmniejsz iloœæ iteracji o 1 wiersz
 			sub R11, 1										;odejmowanie jednego wiersza
@@ -316,7 +325,18 @@ shift_7:
 			jmp continue_after_shift
 
 
-end_program:			
+end_program:
+
+
+			pop R15
+			pop R14
+			pop R13
+			pop R12
+			pop RSI
+			pop RDI
+			pop RBP
+			pop RBX
+
 		ret
 		asmProc endp
 		end
