@@ -16,14 +16,12 @@ overrite_protection_mask_general DB 255, 255, 255, 255, 255, 255, 255, 255, 0, 0
 ;R13 - licznik pomijania piwrwszego i ostatniego pixela w wierszu (w bajtach)
 ;R14 - padding
 ;R15 - stride
-;[RSP+40] - numer pocz¹tkowego wiersza do przetworzenia
-;[RSP+48] - numer wiersza po ostatnim wierszu do przetworzenia
+;[RSP+40] -> RSI - numer pocz¹tkowego wiersza do przetworzenia (dostêpny tylko do koñca inicjaizacji)
+;[RSP+48] ->RSI - numer wiersza po ostatnim wierszu do przetworzenia (dostêpny tylko do koñca inicjalizacji)
 ;xmm0 - przetwarzane pixele (na œrodku maski)
 ;xmm1 - xmm8 - pozosta³e pixele w masce
-;xmm9 - rejestr z tymczasowymi danymi
 ;xmm10 - rejestr z samymi 9 do mno¿enia z rejestrem xmm0
 ;xmm11 - maska koryguj¹ca
-;xmm12 - zachowanie nieaktualizowanych pixeli
 
 .code
 asmProc proc
